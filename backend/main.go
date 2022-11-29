@@ -59,9 +59,11 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 }
 
 func setupRoutes() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Simple Server")
-	})
+	http.HandleFunc(
+		"/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Simple Server")
+		},
+	)
 	// mape our `/ws` endpoint to the `serveWs` function
 	http.HandleFunc("/ws", serveWs)
 }
@@ -69,5 +71,5 @@ func setupRoutes() {
 func main() {
 	fmt.Println("Chat App v0.01")
 	setupRoutes()
-	http.ListenAndServe(":4000", nil)
+	http.ListenAndServe(":8000", nil)
 }
