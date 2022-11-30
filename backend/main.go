@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -69,7 +70,10 @@ func setupRoutes() {
 }
 
 func main() {
-	fmt.Println("Chat App v0.01")
-	setupRoutes()
-	http.ListenAndServe(":8000", nil)
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/", homeHandler)
+	log.Fatalln(http.ListenAndServe(":8000", router))
+}
+func homeHandler(writer http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(writer, "Hello World")
 }
