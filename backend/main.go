@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/TutorialEdge/realtime-chat-go-react/chat"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 
@@ -60,16 +62,16 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 
 func setupRoutes() {
 	http.HandleFunc(
-		"/", func(w http.ResponseWriter, r *http.Request) {
+		"/chat", func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Simple Server")
 		},
 	)
 	// mape our `/ws` endpoint to the `serveWs` function
-	http.HandleFunc("/ws", serveWs)
+	http.HandleFunc("/chat/ws", serveWs)
 }
 
 func main() {
-	fmt.Println("Chat App v0.01")
-	setupRoutes()
-	http.ListenAndServe(":8000", nil)
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/chat", chat.Main)
+	router.HandleFunc("/ws/chat", chat.ServeWs)
 }
