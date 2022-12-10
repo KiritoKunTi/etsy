@@ -1,24 +1,28 @@
 package db
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
 
 type User struct{
-	ID int
-	UUID string
-	FirstName string
-	LastName string
-	IsShop bool
-	Username string
-	Password string
-	Photo string
-	LanguageCode string
-	CreatedAt string
-	Email string
-	Description string
+	ID 				int		`json:"id"`
+	UUID 			string	`json:"UUID"`
+	FirstName 		string	`json:"firstName"`
+	LastName 		string	`json:"lastName"`
+	IsShop 			bool	`json:"isShop"`
+	Username 		string	`json:"username"`
+	Password 		string	`json:"password"`
+	Repassword 		string	`json:"repassword"`
+	Photo 			string	`json:"photo"`
+	LanguageCode 	string	`json:"languageCode"`
+	CreatedAt 		string
+	Email 			string	`json:"email"`
+	Description 	string	`json:"description"`
 }
+
+var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")
 
 func UserByEmailOrUsername(usernameOrEmail string) (user User, err error) {
 	if strings.Contains(usernameOrEmail, "@") {
@@ -31,8 +35,7 @@ func UserByEmailOrUsername(usernameOrEmail string) (user User, err error) {
 
 func (user *User) Create() (err error) {
 	if existsUsernameNotID(user.Username, user.ID) || existsEmailNotID(user.Email, user.ID) {
-		//danger method
-		return
+		return ErrExistsUsernameOrEmail
 	}
 	st, err := DB.Prepare("INSERT INTO USERS(UUID, USERNAME, EMAIL, PASSWORD, FIRST_NAME, LAST_NAME, IS_SHOP, CREATED_AT) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ID, UUID, CREATED_AT")
 	if err != nil {
