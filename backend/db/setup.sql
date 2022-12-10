@@ -45,4 +45,4 @@ create table messages(
     text_message text,
     created_at   timestamp
 );
-alter table users alter "photo" set default 'private/photo/default-avatar.jpg';
+-- alter table users alter "photo" set default 'private/photo/default-avatar.jpg';
