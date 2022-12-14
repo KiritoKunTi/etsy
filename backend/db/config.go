@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	_ "github.com/lib/pq"
 	"io/ioutil"
 	"os"
 )
@@ -11,31 +12,31 @@ import (
 type DBConfig struct {
 	DBUsername string
 	DBPassword string
-	DBName string
-	DBHost string
-	DBPort int
+	DBName     string
+	DBHost     string
+	DBPort     int
 }
 
 var config DBConfig
 
 var DB *sql.DB
 
-func init(){
+func init() {
 	parsingDBConfig()
 	initDB()
 }
 
-func parsingDBConfig(){
+func parsingDBConfig() {
 	config = DBConfig{
 		DBUsername: *flag.String("dbusername", "", "database username of our website"),
 		DBPassword: *flag.String("dbpassword", "", "database password of our website"),
-		DBName: *flag.String("dbname", "", "database name of our website"),
-		DBHost: *flag.String("dbhost", "", "database host of our website"),
-		DBPort: *flag.Int("dbport", 5432, "database port of our website"),
+		DBName:     *flag.String("dbname", "", "database name of our website"),
+		DBHost:     *flag.String("dbhost", "", "database host of our website"),
+		DBPort:     *flag.Int("dbport", 5432, "database port of our website"),
 	}
 }
 
-func initDB(){
+func initDB() {
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s "+
 			"password=%s dbname=%s sslmode=disable",
@@ -47,14 +48,16 @@ func initDB(){
 		fmt.Println("We have problems with connection database", err)
 		os.Exit(1)
 	}
-	//configDB()
+	configDB()
 }
 
-func configDB(){
+func configDB() {
 	st, ioErr := ioutil.ReadFile("db/setup.sql")
 	if ioErr != nil {
 		fmt.Println("Cannot read data/setup.sql")
 		os.Exit(1)
 	}
-	DB.Exec(string(st))
+	if _, err := DB.Exec(string(st)); err != nil {
+		fmt.Println(err)
+	}
 }
