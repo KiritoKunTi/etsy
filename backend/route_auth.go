@@ -12,13 +12,13 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
-		sendErrorMessage(res, "Server error", http.StatusInternalServerError)
+		sendMessage(res, "Server error", http.StatusInternalServerError, user)
 		return
 	}
 	if user.Password == user.Repassword {
 		if err := user.Create(); err != nil {
 			if errors.Is(err, db.ErrExistsUsernameOrEmail) {
-				sendErrorMessage(res, err.Error(), http.StatusNotAcceptable)
+				sendMessage(res, err.Error(), http.StatusNotAcceptable, user)
 				return
 			}
 			if err != nil {
@@ -27,8 +27,10 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		res.WriteHeader(http.StatusCreated)
+		user.Password = ""
+		user.Repassword = ""
+		sendMessage(res, "Successfully registered", http.StatusCreated, user)
 	} else {
-		sendErrorMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable)
+		sendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
 	}
 }

@@ -24,4 +24,3 @@ func CreateUUID() (uuid string) {
 	uuid = fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
 	return
 }
-

@@ -11,9 +11,9 @@ type ErrorMessage struct {
 	Object  interface{} `json:"object"`
 }
 
-func sendErrorMessage(res http.ResponseWriter, message string, status int) {
+func sendMessage(res http.ResponseWriter, message string, status int, obj interface{}) {
 	res.WriteHeader(status)
-	errMessage := ErrorMessage{Message: message}
+	errMessage := ErrorMessage{Message: message, Object: obj}
 	jsonResp, err := json.Marshal(errMessage)
 	if err != nil {
 		fmt.Println("error while marshalling", jsonResp)

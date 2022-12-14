@@ -6,20 +6,20 @@ import (
 	"time"
 )
 
-type User struct{
-	ID 				int		`json:"id"`
-	UUID 			string	`json:"UUID"`
-	FirstName 		string	`json:"firstName"`
-	LastName 		string	`json:"lastName"`
-	IsShop 			bool	`json:"isShop"`
-	Username 		string	`json:"username"`
-	Password 		string	`json:"password"`
-	Repassword 		string	`json:"repassword"`
-	Photo 			string	`json:"photo"`
-	LanguageCode 	string	`json:"languageCode"`
-	CreatedAt 		string
-	Email 			string	`json:"email"`
-	Description 	string	`json:"description"`
+type User struct {
+	ID           int    `json:"id"`
+	UUID         string `json:"UUID"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	IsShop       bool   `json:"isShop"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	Repassword   string `json:"repassword"`
+	Photo        string `json:"photo"`
+	LanguageCode string `json:"languageCode"`
+	CreatedAt    string
+	Email        string `json:"email"`
+	Description  string `json:"description"`
 }
 
 var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")
@@ -42,7 +42,10 @@ func (user *User) Create() (err error) {
 		return
 	}
 	defer st.Close()
-	err = st.QueryRow(CreateUUID(), user.Username, user.Email, Encrypt(user.Password), user.FirstName, user.LastName, time.Now()).Scan(
+	err = st.QueryRow(
+		CreateUUID(), user.Username, user.Email, Encrypt(user.Password), user.FirstName, user.LastName, user.IsShop,
+		time.Now(),
+	).Scan(
 		&user.ID, &user.UUID, &user.CreatedAt,
 	)
 	return
@@ -50,9 +53,10 @@ func (user *User) Create() (err error) {
 
 func UserByID(user_id int) (user User, err error) {
 	err = DB.QueryRow("SELECT * FROM USERS WHERE ID = $1", user_id).Scan(
-		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.IsShop, &user.Photo, &user.LanguageCode,
+		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
+		&user.IsShop, &user.Photo, &user.LanguageCode,
 		&user.Description, &user.CreatedAt,
-		)
+	)
 	return
 }
 
@@ -77,7 +81,8 @@ func (user *User) Session() (session Session, err error) {
 
 func UserByUsername(username string) (user User, err error) {
 	err = DB.QueryRow("SELECT * FROM USERS WHERE USERNAME=$1", username).Scan(
-		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.IsShop, &user.Photo, &user.LanguageCode,
+		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
+		&user.IsShop, &user.Photo, &user.LanguageCode,
 		&user.Description, &user.CreatedAt,
 	)
 	return
@@ -85,9 +90,10 @@ func UserByUsername(username string) (user User, err error) {
 
 func UserByEmail(email string) (user User, err error) {
 	err = DB.QueryRow("SELECT * FROM USERS WHERE EMAIL = $1", email).Scan(
-		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.IsShop, &user.Photo, &user.LanguageCode,
+		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
+		&user.IsShop, &user.Photo, &user.LanguageCode,
 		&user.Description, &user.CreatedAt,
-		)
+	)
 	return
 }
 
