@@ -7,19 +7,20 @@ import (
 )
 
 type User struct {
-	ID           int    `json:"id"`
-	UUID         string `json:"UUID"`
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	IsShop       bool   `json:"isShop"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	Repassword   string `json:"repassword"`
-	Photo        string `json:"photo"`
-	LanguageCode string `json:"languageCode"`
-	CreatedAt    string
-	Email        string `json:"email"`
-	Description  string `json:"description"`
+	ID              int    `json:"id"`
+	UUID            string `json:"UUID"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	IsShop          bool   `json:"isShop"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	Repassword      string `json:"repassword"`
+	Photo           string `json:"photo"`
+	LanguageCode    string `json:"languageCode"`
+	CreatedAt       string
+	Email           string `json:"email"`
+	Description     string `json:"description"`
+	UsernameOrEmail string `json:"usernameOrEmail"`
 }
 
 var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")

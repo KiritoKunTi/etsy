@@ -18,7 +18,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	if user.Password == user.Repassword {
 		if err := user.Create(); err != nil {
 			if errors.Is(err, db.ErrExistsUsernameOrEmail) {
-				sendMessage(res, err.Error(), http.StatusNotAcceptable, user)
+				sendMessage(res, "Already exists username or email", http.StatusNotAcceptable, user)
 				return
 			}
 			if err != nil {
@@ -33,4 +33,35 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	} else {
 		sendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
 	}
+}
+
+func login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var user db.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		sendMessage(w, "Server error", http.StatusInternalServerError, user)
+		return
+	}
+	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
+	if err != nil {
+		sendMessage(w, "Username or email doesn't exist", http.StatusNotAcceptable, user)
+		return
+	}
+	if userFromDB.Password == db.Encrypt(user.Password) {
+		session, err := userFromDB.CreateSession()
+		if err != nil {
+			sendMessage(w, "Server error", http.StatusInternalServerError, user)
+			return
+		}
+		cookie := http.Cookie{
+			Name:     "_cookie",
+			Value:    session.UUID,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, &cookie)
+		userFromDB.Password = ""
+		sendMessage(w, "Successfully login", http.StatusOK, userFromDB)
+		return
+	}
+	sendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, user)
 }

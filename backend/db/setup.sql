@@ -46,4 +46,8 @@ create table sessions (
 --     text_message text,
 --     created_at   timestamp
 -- );
--- alter table users alter "photo" set default 'private/photo/default-avatar.jpg';
+alter table users alter "photo" set default 'private/photo/default.jpg';
+alter table users alter "language_code" set default 'en';
+alter table users alter "description" set default '';
+
+
