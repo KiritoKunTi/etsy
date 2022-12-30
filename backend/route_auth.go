@@ -65,3 +65,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	sendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, user)
 }
+
+func logout(writer http.ResponseWriter, request *http.Request) {
+	cookie, err := request.Cookie("_cookie")
+	if err != http.ErrNoCookie {
+		session := db.Session{UUID: cookie.Value}
+		session.DeleteByUUID()
+	}
+	http.Redirect(writer, request, "/", 302)
+}

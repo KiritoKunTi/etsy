@@ -2,6 +2,8 @@ drop table if exists sessions;
 drop table if exists messages;
 drop table if exists chats;
 drop table if exists users;
+drop table if exists products;
+drop table if exists product_parameters;
 
 
 create table users (
@@ -25,6 +27,20 @@ create table sessions (
   email      varchar(255),
   user_id    integer references users(id),
   created_at timestamp not null   
+);
+create table products(
+    id serial       primary key,
+    user_id         integer references users(id),
+    name            varchar(255),
+    price           integer,
+    amount          integer,
+    description     varchar
+);
+create table product_parameters(
+    id serial   primary key,
+    product_id  integer references products(id),
+    key         varchar(255),
+    value       varchar
 );
 
 -- create table chats(
