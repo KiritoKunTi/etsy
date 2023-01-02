@@ -49,7 +49,7 @@ func initDB() {
 		fmt.Println("We have problems with connection database", err)
 		os.Exit(1)
 	}
-	configDB()
+	//configDB()
 }
 
 func configDB() {

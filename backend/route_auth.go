@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TutorialEdge/realtime-chat-go-react/db"
+	"github.com/TutorialEdge/realtime-chat-go-react/utils"
 	"net/http"
 )
 
@@ -12,13 +13,13 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
-		sendMessage(res, "Server error", http.StatusInternalServerError, user)
+		utils.SendMessage(res, "Server error", http.StatusInternalServerError, user)
 		return
 	}
 	if user.Password == user.Repassword {
 		if err := user.Create(); err != nil {
 			if errors.Is(err, db.ErrExistsUsernameOrEmail) {
-				sendMessage(res, "Already exists username or email", http.StatusNotAcceptable, user)
+				utils.SendMessage(res, "Already exists username or email", http.StatusNotAcceptable, user)
 				return
 			}
 			if err != nil {
@@ -29,9 +30,9 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 		}
 		user.Password = ""
 		user.Repassword = ""
-		sendMessage(res, "Successfully registered", http.StatusCreated, user)
+		utils.SendMessage(res, "Successfully registered", http.StatusCreated, user)
 	} else {
-		sendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
+		utils.SendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
 	}
 }
 
@@ -39,18 +40,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		sendMessage(w, "Server error", http.StatusInternalServerError, user)
+		utils.SendMessage(w, "Server error", http.StatusInternalServerError, user)
 		return
 	}
 	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
 	if err != nil {
-		sendMessage(w, "Username or email doesn't exist", http.StatusNotAcceptable, user)
+		utils.SendMessage(w, "Username or email doesn't exist", http.StatusNotAcceptable, user)
 		return
 	}
 	if userFromDB.Password == db.Encrypt(user.Password) {
 		session, err := userFromDB.CreateSession()
 		if err != nil {
-			sendMessage(w, "Server error", http.StatusInternalServerError, user)
+			utils.SendMessage(w, "Server error", http.StatusInternalServerError, user)
 			return
 		}
 		cookie := http.Cookie{
@@ -60,10 +61,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		http.SetCookie(w, &cookie)
 		userFromDB.Password = ""
-		sendMessage(w, "Successfully login", http.StatusOK, userFromDB)
+		utils.SendMessage(w, "Successfully login", http.StatusOK, userFromDB)
 		return
 	}
-	sendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, user)
+	utils.SendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, user)
 }
 
 func logout(writer http.ResponseWriter, request *http.Request) {
