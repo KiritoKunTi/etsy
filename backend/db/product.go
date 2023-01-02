@@ -3,21 +3,108 @@ package db
 type Product struct {
 	ID                int                `json:"id"`
 	UserID            int                `json:"user_id"`
+	User              User               `json:"user"`
+	CategoryID        int                `json:"category_id"`
+	Category          Category           `json:"category"`
 	Name              string             `json:"name"`
 	Price             int                `json:"price"`
 	Amount            int                `json:"amount"`
 	Description       string             `json:"description"`
+	AmountLikes       int                `json:"amount_likes"`
+	AmountComments    int                `json:"amount_comments"`
+	AmountRatings     int                `json:"amount_ratings"`
+	Rating            float64            `json:"rating"`
+	CreatedAt         string             `json:"created_at"`
 	ProductParameters []ProductParameter `json:"product_parameters"`
 }
 
+func ProductsByCategoryID(categoryID int) (products []Product, err error) {
+	rows, err := DB.Query("SELECT * FROM PRODUCTS	WHERE CATEGORY_ID=$1", categoryID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var product Product
+		err = rows.Scan(
+			&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
+			&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
+			&product.Rating, &product.CreatedAt,
+		)
+		if err != nil {
+			return
+		}
+		product.User, err = UserByIDForPublic(product.UserID)
+		if err != nil {
+			return
+		}
+		product.Category, err = CategoryByID(product.CategoryID)
+		if err != nil {
+			return
+		}
+		products = append(products, product)
+	}
+	return
+}
+
+func ProductsByUserID(userID int) (products []Product, err error) {
+	rows, err := DB.Query("SELECT * FROM PRODUCTS	WHERE USER_ID=$1", userID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var product Product
+		err = rows.Scan(
+			&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
+			&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
+			&product.Rating, &product.CreatedAt,
+		)
+		if err != nil {
+			return
+		}
+		product.User, err = UserByIDForPublic(product.UserID)
+		if err != nil {
+			return
+		}
+		product.Category, err = CategoryByID(product.CategoryID)
+		if err != nil {
+			return
+		}
+		products = append(products, product)
+	}
+	return
+}
+
+func ProductByID(productID int) (product Product, err error) {
+	err = DB.QueryRow("SELECT * FROM PRODUCTS WHERE ID=$1", productID).Scan(
+		&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
+		&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
+		&product.Rating, &product.CreatedAt,
+	)
+	if err != nil {
+		return
+	}
+	product.User, err = UserByIDForPublic(product.UserID)
+	if err != nil {
+		return
+	}
+	product.Category, err = CategoryByID(product.CategoryID)
+	if err != nil {
+		return
+	}
+	product.ProductParameters, err = ProductParametersByProductID(productID)
+	return
+}
+
 func (product *Product) Create() (err error) {
-	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, NAME, PRICE, AMOUNT, DESCRIPTION) VALUES ($1, $2, $3, $4, $5) RETURNING ID")
+	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, CATEGORY_ID, NAME, PRICE, AMOUNT, DESCRIPTION) VALUES ($1, $2, $3, $4, $5, $6) RETURNING ID")
 	if err != nil {
 		return
 	}
 	defer st.Close()
 	err = st.QueryRow(
-		product.UserID, product.Name, product.Price, product.Amount, product.Description,
+		product.UserID, product.CategoryID, product.Name, product.Price, product.Amount, product.Description,
 	).Scan(&product.ID)
 	if err != nil {
 		return
@@ -38,13 +125,21 @@ func (product *Product) CreateParameters() (err error) {
 }
 
 func (product *Product) Delete() (err error) {
-	stmt, err := DB.Prepare("DELETE FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1")
+	err = product.DeleteParameters()
+	if err != nil {
+		return
+	}
+	stmt, err := DB.Prepare("DELETE FROM PRODUCTS WHERE ID=$1")
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(product.ID)
-	stmt, err = DB.Prepare("DELETE FROM PRODUCTS WHERE ID=$1")
+	return
+}
+
+func (product *Product) DeleteParameters() (err error) {
+	stmt, err := DB.Prepare("DELETE FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1")
 	if err != nil {
 		return
 	}
