@@ -63,7 +63,7 @@ func UserByID(user_id int) (user User, err error) {
 
 func UserByIDForPublic(user_id int) (user User, err error) {
 	err = DB.QueryRow(
-		"SELECT USERNAME, FIRST_NAME, LAST_NAME, IS_SHOP, PHOTO, DESRIPTION FROM USERS WHERE ID = $1", user_id,
+		"SELECT USERNAME, FIRST_NAME, LAST_NAME, IS_SHOP, PHOTO, DESCRIPTION FROM USERS WHERE ID = $1", user_id,
 	).Scan(
 		&user.Username, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.Description,

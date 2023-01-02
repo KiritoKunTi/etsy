@@ -8,7 +8,11 @@ import (
 	"net/http"
 )
 
-func CreateProduct(writer http.ResponseWriter, request *http.Request) {
+const (
+	AmountTopProducts = 10
+)
+
+func CreateProductHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	session, err := utils.Session(writer, request)
 	if err != nil {
@@ -28,5 +32,15 @@ func CreateProduct(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.SendMessage(writer, "Successfully created", http.StatusOK, product)
+}
 
+func RecentProductsHander(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	products, err := db.RecentProducts(AmountTopProducts)
+	if err != nil {
+		utils.SendMessage(writer, "Server error", http.StatusInternalServerError, products)
+		fmt.Println(err)
+		return
+	}
+	utils.SendMessage(writer, "Requested successfully", http.StatusOK, products)
 }

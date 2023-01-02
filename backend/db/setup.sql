@@ -81,8 +81,9 @@ alter table products alter "amo_likes" set default 0;
 alter table products alter "amo_comments" set default 0;
 alter table products alter "amo_ratings" set default 0;
 alter table categories alter "amo_products" set default 0;
+alter table products alter "rating" set default 0;
 insert into categories(name) values
-                                  ('"Electronics"'),
+                                  ('Electronics'),
                                   (E'Men\'s Fashion');
 
 

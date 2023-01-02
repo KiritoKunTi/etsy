@@ -7,13 +7,13 @@ type ProductParameter struct {
 	Value     string `json:"value"`
 }
 
-func (parameter *ProductParameter) Create(product_id int) (err error) {
+func (parameter *ProductParameter) Create() (err error) {
 	stmt, err := DB.Prepare("INSERT INTO PRODUCT_PARAMETERS(PRODUCT_ID, KEY, VALUE) VALUES ($1, $2, $3) RETURNING ID")
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(product_id, parameter.Key, parameter.Value).Scan(&parameter.ID)
+	err = stmt.QueryRow(parameter.ProductID, parameter.Key, parameter.Value).Scan(&parameter.ID)
 	return
 }
 

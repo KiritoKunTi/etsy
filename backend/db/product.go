@@ -1,5 +1,10 @@
 package db
 
+import (
+	"database/sql"
+	"time"
+)
+
 type Product struct {
 	ID                int                `json:"id"`
 	UserID            int                `json:"user_id"`
@@ -24,26 +29,7 @@ func ProductsByCategoryID(categoryID int) (products []Product, err error) {
 		return
 	}
 	defer rows.Close()
-	for rows.Next() {
-		var product Product
-		err = rows.Scan(
-			&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
-			&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
-			&product.Rating, &product.CreatedAt,
-		)
-		if err != nil {
-			return
-		}
-		product.User, err = UserByIDForPublic(product.UserID)
-		if err != nil {
-			return
-		}
-		product.Category, err = CategoryByID(product.CategoryID)
-		if err != nil {
-			return
-		}
-		products = append(products, product)
-	}
+	products, err = IterateFromQuery(rows)
 	return
 }
 
@@ -53,6 +39,21 @@ func ProductsByUserID(userID int) (products []Product, err error) {
 		return
 	}
 	defer rows.Close()
+	products, err = IterateFromQuery(rows)
+	return
+}
+
+func RecentProducts(amount int) (products []Product, err error) {
+	rows, err := DB.Query("SELECT * FROM PRODUCTS ORDER BY CREATED_AT DESC LIMIT $1", amount)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	products, err = IterateFromQuery(rows)
+	return
+}
+
+func IterateFromQuery(rows *sql.Rows) (products []Product, err error) {
 	for rows.Next() {
 		var product Product
 		err = rows.Scan(
@@ -98,13 +99,14 @@ func ProductByID(productID int) (product Product, err error) {
 }
 
 func (product *Product) Create() (err error) {
-	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, CATEGORY_ID, NAME, PRICE, AMOUNT, DESCRIPTION) VALUES ($1, $2, $3, $4, $5, $6) RETURNING ID")
+	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, CATEGORY_ID, NAME, PRICE, AMOUNT, DESCRIPTION, CREATED_AT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ID")
 	if err != nil {
 		return
 	}
 	defer st.Close()
 	err = st.QueryRow(
 		product.UserID, product.CategoryID, product.Name, product.Price, product.Amount, product.Description,
+		time.Now(),
 	).Scan(&product.ID)
 	if err != nil {
 		return
@@ -118,7 +120,8 @@ func (product *Product) Create() (err error) {
 }
 func (product *Product) CreateParameters() (err error) {
 	for _, parameter := range product.ProductParameters {
-		err = parameter.Create(product.ID)
+		parameter.ProductID = product.ID
+		err = parameter.Create()
 		return
 	}
 	return
