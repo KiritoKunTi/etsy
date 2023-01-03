@@ -23,6 +23,17 @@ func SendMessage(res http.ResponseWriter, message string, status int, obj interf
 	res.Write(jsonResp)
 }
 
+func SendErrorMessage(res http.ResponseWriter, message string, status int, obj interface{}, err error) {
+	fmt.Println(err)
+	res.WriteHeader(status)
+	errMessage := ErrorMessage{Message: message, Object: obj}
+	jsonResp, err := json.Marshal(errMessage)
+	if err != nil {
+		fmt.Println("error while marshalling", jsonResp)
+	}
+	res.Write(jsonResp)
+}
+
 func Session(writer http.ResponseWriter, request *http.Request) (session db.Session, err error) {
 	cookie, err := request.Cookie("_cookie")
 	if err == nil {

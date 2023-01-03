@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/TutorialEdge/realtime-chat-go-react/db"
 	"github.com/TutorialEdge/realtime-chat-go-react/utils"
 	"net/http"
@@ -13,7 +12,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
-		utils.SendMessage(res, "Server error", http.StatusInternalServerError, user)
+		utils.SendErrorMessage(res, "Server error", http.StatusInternalServerError, user, err)
 		return
 	}
 	if user.Password == user.Repassword {
@@ -23,8 +22,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			if err != nil {
-				fmt.Println("error while creating user")
-				fmt.Println(err)
+				utils.SendErrorMessage(res, "Server error", http.StatusInternalServerError, user, err)
 				return
 			}
 		}
@@ -40,7 +38,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		utils.SendMessage(w, "Server error", http.StatusInternalServerError, user)
+		utils.SendErrorMessage(w, "Server error", http.StatusInternalServerError, user, err)
 		return
 	}
 	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
@@ -51,7 +49,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if userFromDB.Password == db.Encrypt(user.Password) {
 		session, err := userFromDB.CreateSession()
 		if err != nil {
-			utils.SendMessage(w, "Server error", http.StatusInternalServerError, user)
+			utils.SendErrorMessage(w, "Server error", http.StatusInternalServerError, user, err)
 			return
 		}
 		cookie := http.Cookie{
@@ -68,10 +66,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
 	cookie, err := request.Cookie("_cookie")
 	if err != http.ErrNoCookie {
 		session := db.Session{UUID: cookie.Value}
-		session.DeleteByUUID()
+		err = session.DeleteByUUID()
+		if err != nil {
+			utils.SendErrorMessage(writer, "Server error", http.StatusInternalServerError, nil, err)
+			return
+		}
 	}
-	http.Redirect(writer, request, "/", 302)
+	utils.SendMessage(writer, "Successfully logged out", http.StatusOK, nil)
 }

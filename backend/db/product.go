@@ -23,13 +23,33 @@ type Product struct {
 	ProductParameters []ProductParameter `json:"product_parameters"`
 }
 
-func ProductsByCategoryID(categoryID int) (products []Product, err error) {
-	rows, err := DB.Query("SELECT * FROM PRODUCTS	WHERE CATEGORY_ID=$1", categoryID)
+func (product *Product) Update() (err error) {
+	stmt, err := DB.Prepare("UPDATE PRODUCTS SET NAME=$1, PRICE=$2, AMOUNT=$3, DESCRIPTION=$4 WHERE ID=$5")
+	if err != nil {
+		return
+	}
+	_, err = stmt.Exec(product.Name, product.Price, product.Amount, product.Description, product.ID)
+	if err != nil {
+		return
+	}
+	err = product.DeleteParameters()
+	if err != nil {
+		return
+	}
+	err = product.CreateParameters()
+	if err != nil {
+		return
+	}
+	return
+}
+
+func ProductsByCategoryID(categoryID int, amo int) (products []Product, err error) {
+	rows, err := DB.Query("SELECT * FROM PRODUCTS	WHERE CATEGORY_ID=$1 LIMIT $2", categoryID, amo)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
-	products, err = IterateFromQuery(rows)
+	products, err = QueryToSliceProducts(rows)
 	return
 }
 
@@ -39,7 +59,7 @@ func ProductsByUserID(userID int) (products []Product, err error) {
 		return
 	}
 	defer rows.Close()
-	products, err = IterateFromQuery(rows)
+	products, err = QueryToSliceProducts(rows)
 	return
 }
 
@@ -49,11 +69,11 @@ func RecentProducts(amount int) (products []Product, err error) {
 		return
 	}
 	defer rows.Close()
-	products, err = IterateFromQuery(rows)
+	products, err = QueryToSliceProducts(rows)
 	return
 }
 
-func IterateFromQuery(rows *sql.Rows) (products []Product, err error) {
+func QueryToSliceProducts(rows *sql.Rows) (products []Product, err error) {
 	for rows.Next() {
 		var product Product
 		err = rows.Scan(
@@ -99,7 +119,7 @@ func ProductByID(productID int) (product Product, err error) {
 }
 
 func (product *Product) Create() (err error) {
-	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, CATEGORY_ID, NAME, PRICE, AMOUNT, DESCRIPTION, CREATED_AT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ID")
+	st, err := DB.Prepare("INSERT INTO PRODUCTS(USER_ID, CATEGORY_ID, NAME, PRICE, AMOUNT, DESCRIPTION, CREATED_AT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ID, CREATED_AT")
 	if err != nil {
 		return
 	}
@@ -107,7 +127,7 @@ func (product *Product) Create() (err error) {
 	err = st.QueryRow(
 		product.UserID, product.CategoryID, product.Name, product.Price, product.Amount, product.Description,
 		time.Now(),
-	).Scan(&product.ID)
+	).Scan(&product.ID, &product.CreatedAt)
 	if err != nil {
 		return
 	}
