@@ -1,3 +1,4 @@
+drop table if exists product_photo;
 drop table if exists sessions;
 drop table if exists messages;
 drop table if exists chats;
@@ -5,7 +6,6 @@ drop table if exists product_parameters;
 drop table if exists products;
 drop table if exists categories;
 drop table if exists users;
-
 
 create table users (
     id            serial primary key,
@@ -55,6 +55,12 @@ create table product_parameters(
     key         varchar(255),
     value       varchar
 );
+create table product_photo(
+    id          serial primary key,
+    product_id  integer references products(id),
+    photo       varchar(320),
+)
+
 
 -- create table chats(
 --     id              serial primary key,

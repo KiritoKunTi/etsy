@@ -14,7 +14,7 @@ func UpdateUserPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 	request.ParseMultipartForm(10 << 20)
 	session, err := utils.Session(writer, request)
 	if err != nil {
-		utils.SendMessage(writer, "Authorization request", http.StatusUnauthorized, nil)
+		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
 		return
 	}
 	user, err := db.UserByID(session.User_ID)
@@ -30,7 +30,7 @@ func UpdateUserPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 	user.Photo = photo
 	user.UpdatePhoto()
 	user.HideInfo()
-	utils.SendMessage(writer, "Successfully updated", http.StatusOK, user)
+	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, user)
 }
 
 func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
@@ -40,7 +40,7 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 		utils.SendErrorMessage(writer, err)
 	}
 	if user.Password != user.Repassword {
-		utils.SendMessage(writer, "Passwords' don't match", http.StatusNotAcceptable, user)
+		utils.SendMessage(writer, utils.PasswordsMismatchMessage, http.StatusNotAcceptable, user)
 		return
 	}
 	userFromDB, err := db.UserByID(user.ID)
@@ -49,12 +49,12 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if userFromDB.Password != db.Encrypt(user.Password) {
-		utils.SendMessage(writer, "Incorrect password", http.StatusNotAcceptable, user)
+		utils.SendMessage(writer, utils.PasswordsMismatchMessage, http.StatusNotAcceptable, user)
 		return
 	}
 	if err = user.Update(); err != nil {
 		utils.SendErrorMessage(writer, err)
 		return
 	}
-	utils.SendMessage(writer, "Succesfully updated", http.StatusOK, user)
+	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, user)
 }

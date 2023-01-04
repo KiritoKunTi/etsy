@@ -2,15 +2,16 @@ package db
 
 import (
 	"database/sql"
+	"os"
 	"time"
 )
 
 type Product struct {
-	ID                int                `json:"id"`
+	ID                int                `json:"id,omitempty"`
 	UserID            int                `json:"user_id"`
-	User              User               `json:"user"`
+	User              User               `json:"user,omitempty"`
 	CategoryID        int                `json:"category_id"`
-	Category          Category           `json:"category"`
+	Category          Category           `json:"category,omitempty"`
 	Name              string             `json:"name"`
 	Price             int                `json:"price"`
 	Amount            int                `json:"amount"`
@@ -26,11 +27,14 @@ type Product struct {
 }
 
 func (product *Product) Update() (err error) {
-	stmt, err := DB.Prepare("UPDATE PRODUCTS SET NAME=$1, PRICE=$2, AMOUNT=$3, DESCRIPTION=$4, PHOTO=$5 WHERE ID=$6")
+	stmt, err := DB.Prepare("UPDATE PRODUCTS SET NAME=$1, PRICE=$2, AMOUNT=$3, DESCRIPTION=$4 WHERE ID=$5")
+	if prod, err := ProductByID(product.ID); os.Remove(prod.Photo) != nil || err != nil {
+		return err
+	}
 	if err != nil {
 		return
 	}
-	_, err = stmt.Exec(product.Name, product.Price, product.Amount, product.Description, product.Photo, product.ID)
+	_, err = stmt.Exec(product.Name, product.Price, product.Amount, product.Description, product.ID)
 	if err != nil {
 		return
 	}
@@ -42,6 +46,11 @@ func (product *Product) Update() (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (product *Product) UpdatePhoto() (err error) {
+	_, err = DB.Exec("UPDATE PRODUCTS SET PHOTO=$1 WHERE ID=$2", product.Photo, product.ID)
 	return
 }
 

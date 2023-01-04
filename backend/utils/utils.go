@@ -19,7 +19,10 @@ type ErrorMessage struct {
 	Message string `json:"message"`
 }
 
-const errorMessage = "ServerError"
+const (
+	AmountTopProducts = 10
+	PaginationSize    = 10
+)
 
 func SendMessage(res http.ResponseWriter, message string, status int, obj interface{}) {
 	res.WriteHeader(status)

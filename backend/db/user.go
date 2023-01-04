@@ -8,20 +8,20 @@ import (
 
 type User struct {
 	ID              int    `json:"id"`
-	UUID            string `json:"UUID"`
+	UUID            string `json:"UUID,omitempty"`
 	FirstName       string `json:"first_name"`
 	LastName        string `json:"last_name"`
 	IsShop          bool   `json:"is_shop"`
 	Username        string `json:"username"`
-	Password        string `json:"password"`
-	Repassword      string `json:"repassword"`
+	Password        string `json:"password,omitempty"`
+	Repassword      string `json:"repassword,omitempty"`
 	Photo           string `json:"photo"`
-	LanguageCode    string `json:"languageCode"`
+	LanguageCode    string `json:"languageCode,omitempty"`
 	CreatedAt       string `json:"created_at"`
 	Email           string `json:"email"`
 	Description     string `json:"description"`
-	UsernameOrEmail string `json:"username_or_email"`
-	OldPassword     string `json:"old_password"`
+	UsernameOrEmail string `json:"username_or_email,omitempty"`
+	OldPassword     string `json:"old_password,omitempty"`
 }
 
 var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")
@@ -97,6 +97,7 @@ func UserByIDForPublic(user_id int) (user User, err error) {
 		&user.Username, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.Description,
 	)
+	user.ID = user_id
 	return
 }
 

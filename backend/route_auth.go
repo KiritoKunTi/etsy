@@ -18,7 +18,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	if user.Password == user.Repassword {
 		if err := user.Create(); err != nil {
 			if errors.Is(err, db.ErrExistsUsernameOrEmail) {
-				utils.SendMessage(res, "Already exists username or email", http.StatusNotAcceptable, user)
+				utils.SendMessage(res, utils.ExistsUserMessage, http.StatusNotAcceptable, user)
 				return
 			}
 			if err != nil {
@@ -27,9 +27,9 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 		user.HideInfo()
-		utils.SendMessage(res, "Successfully registered", http.StatusCreated, user)
+		utils.SendMessage(res, utils.SuccessfullyCreatedMessage, http.StatusCreated, user)
 	} else {
-		utils.SendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
+		utils.SendMessage(res, utils.PasswordsMismatchMessage, http.StatusNotAcceptable, user)
 	}
 }
 
@@ -42,7 +42,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
 	if err != nil {
-		utils.SendMessage(w, "Username or email doesn't exist", http.StatusNotAcceptable, user)
+		utils.SendMessage(w, utils.NotExistsUserMessage, http.StatusNotAcceptable, user)
 		return
 	}
 	if userFromDB.Password == db.Encrypt(user.Password) {
@@ -58,7 +58,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		http.SetCookie(w, &cookie)
 		userFromDB.HideInfo()
-		utils.SendMessage(w, "Successfully login", http.StatusOK, userFromDB)
+		utils.SendMessage(w, utils.SuccessfullyRequested, http.StatusOK, userFromDB)
 		return
 	}
 	utils.SendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, nil)
@@ -75,5 +75,5 @@ func logout(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 	}
-	utils.SendMessage(writer, "Successfully logged out", http.StatusOK, nil)
+	utils.SendMessage(writer, utils.SuccessfullyRequested, http.StatusOK, nil)
 }
