@@ -39,6 +39,7 @@ create table products(
     user_id         integer references users(id),
     category_id     integer references categories(id),
     name            varchar(255),
+    photo           varchar(350),
     price           integer,
     amount          integer,
     description     varchar,
@@ -74,7 +75,7 @@ create table product_parameters(
 --     text_message text,
 --     created_at   timestamp
 -- );
-alter table users alter "photo" set default 'private/photo/default.jpg';
+alter table users alter "photo" set default 'private/avatar/default.jpg';
 alter table users alter "language_code" set default 'en';
 alter table users alter "description" set default '';
 alter table products alter "amo_likes" set default 0;
@@ -82,6 +83,7 @@ alter table products alter "amo_comments" set default 0;
 alter table products alter "amo_ratings" set default 0;
 alter table categories alter "amo_products" set default 0;
 alter table products alter "rating" set default 0;
+alter table products alter "photo" set default 'private/product/default.jpg';
 insert into categories(name) values
                                   ('Electronics'),
                                   (E'Men\'s Fashion');

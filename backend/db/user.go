@@ -9,21 +9,50 @@ import (
 type User struct {
 	ID              int    `json:"id"`
 	UUID            string `json:"UUID"`
-	FirstName       string `json:"firstName"`
-	LastName        string `json:"lastName"`
-	IsShop          bool   `json:"isShop"`
+	FirstName       string `json:"first_name"`
+	LastName        string `json:"last_name"`
+	IsShop          bool   `json:"is_shop"`
 	Username        string `json:"username"`
 	Password        string `json:"password"`
 	Repassword      string `json:"repassword"`
 	Photo           string `json:"photo"`
 	LanguageCode    string `json:"languageCode"`
-	CreatedAt       string
+	CreatedAt       string `json:"created_at"`
 	Email           string `json:"email"`
 	Description     string `json:"description"`
-	UsernameOrEmail string `json:"usernameOrEmail"`
+	UsernameOrEmail string `json:"username_or_email"`
+	OldPassword     string `json:"old_password"`
 }
 
 var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")
+
+func (user *User) HideInfo() {
+	user.UUID = ""
+	user.Password = ""
+	user.Repassword = ""
+	user.OldPassword = ""
+}
+
+func (user *User) Update() (err error) {
+	stmt, err := DB.Prepare("UPDATE USERS SET FIRST_NAME=$1, lAST_NAME=$2, USERNAME=$3, PASSWORD=$4, EMAIL=$5, DESCRIPTION=$6 WHERE ID=$7")
+	if err != nil {
+		return
+	}
+	_, err = stmt.Exec(
+		user.FirstName, user.LastName, user.Username, Encrypt(user.Password), user.Email, user.Description, user.ID,
+	)
+	user.HideInfo()
+	return
+}
+
+func (user *User) UpdatePhoto() (err error) {
+	stmt, err := DB.Prepare("UPDATE USERS SET PHOTO=$1 WHERE ID=$2")
+	if err != nil {
+		return
+	}
+	_, err = stmt.Exec(user.Photo, user.ID)
+	return
+}
 
 func UserByEmailOrUsername(usernameOrEmail string) (user User, err error) {
 	if strings.Contains(usernameOrEmail, "@") {

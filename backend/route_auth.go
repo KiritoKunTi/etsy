@@ -12,7 +12,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
-		utils.SendErrorMessage(res, "Server error", http.StatusInternalServerError, user, err)
+		utils.SendErrorMessage(res, err)
 		return
 	}
 	if user.Password == user.Repassword {
@@ -22,12 +22,11 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			if err != nil {
-				utils.SendErrorMessage(res, "Server error", http.StatusInternalServerError, user, err)
+				utils.SendErrorMessage(res, err)
 				return
 			}
 		}
-		user.Password = ""
-		user.Repassword = ""
+		user.HideInfo()
 		utils.SendMessage(res, "Successfully registered", http.StatusCreated, user)
 	} else {
 		utils.SendMessage(res, "Passwords' doesn't match", http.StatusNotAcceptable, user)
@@ -38,7 +37,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		utils.SendErrorMessage(w, "Server error", http.StatusInternalServerError, user, err)
+		utils.SendErrorMessage(w, err)
 		return
 	}
 	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
@@ -49,7 +48,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if userFromDB.Password == db.Encrypt(user.Password) {
 		session, err := userFromDB.CreateSession()
 		if err != nil {
-			utils.SendErrorMessage(w, "Server error", http.StatusInternalServerError, user, err)
+			utils.SendErrorMessage(w, err)
 			return
 		}
 		cookie := http.Cookie{
@@ -58,11 +57,11 @@ func login(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 		}
 		http.SetCookie(w, &cookie)
-		userFromDB.Password = ""
+		userFromDB.HideInfo()
 		utils.SendMessage(w, "Successfully login", http.StatusOK, userFromDB)
 		return
 	}
-	utils.SendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, user)
+	utils.SendMessage(w, "Password or email is not correct", http.StatusNotAcceptable, nil)
 }
 
 func logout(writer http.ResponseWriter, request *http.Request) {
@@ -72,7 +71,7 @@ func logout(writer http.ResponseWriter, request *http.Request) {
 		session := db.Session{UUID: cookie.Value}
 		err = session.DeleteByUUID()
 		if err != nil {
-			utils.SendErrorMessage(writer, "Server error", http.StatusInternalServerError, nil, err)
+			utils.SendErrorMessage(writer, err)
 			return
 		}
 	}

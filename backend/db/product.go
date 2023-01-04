@@ -21,14 +21,16 @@ type Product struct {
 	Rating            float64            `json:"rating"`
 	CreatedAt         string             `json:"created_at"`
 	ProductParameters []ProductParameter `json:"product_parameters"`
+	Photo             string             `json:"photo"`
+	ProductPhotos     []ProductPhoto     `json:"photos"`
 }
 
 func (product *Product) Update() (err error) {
-	stmt, err := DB.Prepare("UPDATE PRODUCTS SET NAME=$1, PRICE=$2, AMOUNT=$3, DESCRIPTION=$4 WHERE ID=$5")
+	stmt, err := DB.Prepare("UPDATE PRODUCTS SET NAME=$1, PRICE=$2, AMOUNT=$3, DESCRIPTION=$4, PHOTO=$5 WHERE ID=$6")
 	if err != nil {
 		return
 	}
-	_, err = stmt.Exec(product.Name, product.Price, product.Amount, product.Description, product.ID)
+	_, err = stmt.Exec(product.Name, product.Price, product.Amount, product.Description, product.Photo, product.ID)
 	if err != nil {
 		return
 	}
@@ -77,7 +79,8 @@ func QueryToSliceProducts(rows *sql.Rows) (products []Product, err error) {
 	for rows.Next() {
 		var product Product
 		err = rows.Scan(
-			&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
+			&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Photo, &product.Price,
+			&product.Amount,
 			&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
 			&product.Rating, &product.CreatedAt,
 		)
@@ -99,8 +102,9 @@ func QueryToSliceProducts(rows *sql.Rows) (products []Product, err error) {
 
 func ProductByID(productID int) (product Product, err error) {
 	err = DB.QueryRow("SELECT * FROM PRODUCTS WHERE ID=$1", productID).Scan(
-		&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Price, &product.Amount,
-		&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
+		&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.Photo,
+		&product.Price, &product.Amount, &product.Description, &product.AmountLikes, &product.AmountComments,
+		&product.AmountRatings,
 		&product.Rating, &product.CreatedAt,
 	)
 	if err != nil {
@@ -142,6 +146,16 @@ func (product *Product) CreateParameters() (err error) {
 	for _, parameter := range product.ProductParameters {
 		parameter.ProductID = product.ID
 		err = parameter.Create()
+		return
+	}
+	return
+}
+
+func (product *Product) CreatePhotos() (err error) {
+	for _, photo := range product.ProductPhotos {
+		photo.ProductID = product.ID
+		err = photo.Create()
+		err = photo.Create()
 		return
 	}
 	return
