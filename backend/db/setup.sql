@@ -26,7 +26,7 @@ create table sessions (
   id         serial primary key,
   uuid       varchar(64) not null unique,
   email      varchar(255),
-  user_id    integer references users(id),
+  user_id    integer references users(id) on delete cascade,
   created_at timestamp not null   
 );
 create table categories(
@@ -36,8 +36,8 @@ create table categories(
 );
 create table products(
     id              serial primary key,
-    user_id         integer references users(id),
-    category_id     integer references categories(id),
+    user_id         integer references users(id) on delete cascade,
+    category_id     integer references categories(id) on delete cascade,
     name            varchar(255),
     photo           varchar(350),
     price           integer,
@@ -51,15 +51,16 @@ create table products(
 );
 create table product_parameters(
     id          serial primary key,
-    product_id  integer references products(id),
+    product_id  integer references products(id) on delete cascade,
     key         varchar(255),
     value       varchar
 );
+
 create table product_photo(
     id          serial primary key,
-    product_id  integer references products(id),
-    photo       varchar(320),
-)
+    product_id  integer references products(id) on delete cascade,
+    photo       varchar(320)
+);
 
 
 -- create table chats(
@@ -81,6 +82,20 @@ create table product_photo(
 --     text_message text,
 --     created_at   timestamp
 -- );
+create or replace function product_insertion_category_function()
+    returns trigger
+    as $$
+    begin
+    update categories set amo_products = amo_products + 1 where id = NEW.category_id;
+    return new;
+    end;
+    $$
+    language 'plpgsql';
+
+create or replace trigger product_insertion_category
+    after insert on
+    products for each row
+    execute procedure product_insertion_category_function();
 alter table users alter "photo" set default 'private/avatar/default.jpg';
 alter table users alter "language_code" set default 'en';
 alter table users alter "description" set default '';

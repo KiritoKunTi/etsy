@@ -4,7 +4,7 @@ type Category struct {
 	ID             int       `json:"id"`
 	Name           string    `json:"name"`
 	AmountProducts int       `json:"amount_products"`
-	Products       []Product `json:"products"`
+	Products       []Product `json:"products,omitempty"`
 }
 
 func CategoryByID(categoryID int) (category Category, err error) {

@@ -33,3 +33,22 @@ func ProductParametersByProductID(productID int) (parameters []ProductParameter,
 	}
 	return
 }
+
+func (product *Product) DeleteParameters() (err error) {
+	stmt, err := DB.Prepare("DELETE FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(product.ID)
+	return
+}
+
+func (product *Product) CreateParameters() (err error) {
+	for _, parameter := range product.ProductParameters {
+		parameter.ProductID = product.ID
+		err = parameter.Create()
+		return
+	}
+	return
+}

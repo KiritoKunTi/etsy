@@ -15,3 +15,18 @@ func (photo *ProductPhoto) Create() (err error) {
 	err = stmt.QueryRow(photo.ProductID, photo.Photo).Scan(&photo.ID)
 	return
 }
+
+func (photo *ProductPhoto) Delete() (err error) {
+	_, err = DB.Exec("DELETE FROM PRODUCT_PHOTO WHERE ID=$1", photo.ID)
+	return
+}
+
+func (product *Product) CreatePhotos() (err error) {
+	for _, photo := range product.ProductPhotos {
+		photo.ProductID = product.ID
+		if err = photo.Create(); err != nil {
+			return
+		}
+	}
+	return
+}

@@ -12,7 +12,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
-		utils.SendErrorMessage(res, err)
+		utils.SendAndPrintErrorMessage(res, err)
 		return
 	}
 	if user.Password == user.Repassword {
@@ -22,7 +22,7 @@ func signUp(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 			if err != nil {
-				utils.SendErrorMessage(res, err)
+				utils.SendAndPrintErrorMessage(res, err)
 				return
 			}
 		}
@@ -37,7 +37,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		utils.SendErrorMessage(w, err)
+		utils.SendAndPrintErrorMessage(w, err)
 		return
 	}
 	userFromDB, err := db.UserByEmailOrUsername(user.UsernameOrEmail)
@@ -48,7 +48,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if userFromDB.Password == db.Encrypt(user.Password) {
 		session, err := userFromDB.CreateSession()
 		if err != nil {
-			utils.SendErrorMessage(w, err)
+			utils.SendAndPrintErrorMessage(w, err)
 			return
 		}
 		cookie := http.Cookie{
@@ -71,7 +71,7 @@ func logout(writer http.ResponseWriter, request *http.Request) {
 		session := db.Session{UUID: cookie.Value}
 		err = session.DeleteByUUID()
 		if err != nil {
-			utils.SendErrorMessage(writer, err)
+			utils.SendAndPrintErrorMessage(writer, err)
 			return
 		}
 	}

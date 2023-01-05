@@ -19,12 +19,12 @@ func UpdateUserPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	user, err := db.UserByID(session.User_ID)
 	if err != nil {
-		utils.SendErrorMessage(writer, err)
+		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
 	photo, err := utils.PasteFile(request, photo)
 	if err != nil {
-		utils.SendErrorMessage(writer, err)
+		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
 	user.Photo = photo
@@ -37,7 +37,7 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	var user db.User
 	if err := json.NewDecoder(request.Body).Decode(&user); err != nil {
-		utils.SendErrorMessage(writer, err)
+		utils.SendAndPrintErrorMessage(writer, err)
 	}
 	if user.Password != user.Repassword {
 		utils.SendMessage(writer, utils.PasswordsMismatchMessage, http.StatusNotAcceptable, user)
@@ -45,7 +45,7 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	userFromDB, err := db.UserByID(user.ID)
 	if err != nil {
-		utils.SendErrorMessage(writer, err)
+		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
 	if userFromDB.Password != db.Encrypt(user.Password) {
@@ -53,7 +53,7 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err = user.Update(); err != nil {
-		utils.SendErrorMessage(writer, err)
+		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
 	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, user)

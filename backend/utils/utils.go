@@ -34,7 +34,7 @@ func SendMessage(res http.ResponseWriter, message string, status int, obj interf
 	res.Write(jsonResp)
 }
 
-func SendErrorMessage(res http.ResponseWriter, err error) {
+func SendAndPrintErrorMessage(res http.ResponseWriter, err error) {
 	fmt.Println(err)
 	res.WriteHeader(http.StatusInternalServerError)
 	errMessage := ErrorMessage{Message: errorMessage}
