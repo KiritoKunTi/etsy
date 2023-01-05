@@ -10,4 +10,5 @@ func Store_Handlers() {
 	Router.HandleFunc("/store/updateproduct", store.UpdateProductHandler)
 	Router.HandleFunc("/store/updateproductphoto", store.UpdateProductPhotoHandler)
 	Router.HandleFunc("/store/productsbyuser", store.UserProductsHandler)
+	Router.HandleFunc("/store/upgradeproductphotos", store.UpgradeProductPhotosHandler)
 }

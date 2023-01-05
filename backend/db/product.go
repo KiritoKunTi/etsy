@@ -23,7 +23,7 @@ type Product struct {
 	CreatedAt         string             `json:"created_at"`
 	ProductParameters []ProductParameter `json:"product_parameters"`
 	MainPhoto         string             `json:"photo"`
-	ProductPhotos     []ProductPhoto     `json:"photos"`
+	ProductPhotos     []ProductPhoto     `json:"photos,omitempty"`
 }
 
 func (product *Product) Update() (err error) {
@@ -105,15 +105,18 @@ func ProductByID(productID int) (product Product, err error) {
 	if err != nil {
 		return
 	}
-	product.User, err = UserByIDForPublic(product.UserID)
-	if err != nil {
+	if product.User, err = UserByIDForPublic(product.UserID); err != nil {
 		return
 	}
-	product.Category, err = CategoryByID(product.CategoryID)
-	if err != nil {
+	if product.Category, err = CategoryByID(product.CategoryID); err != nil {
 		return
 	}
-	product.ProductParameters, err = ProductParametersByProductID(productID)
+	if product.ProductParameters, err = ProductParametersByProductID(productID); err != nil {
+		return
+	}
+	if err = product.GetPhotos(); err != nil {
+		return
+	}
 	return
 }
 

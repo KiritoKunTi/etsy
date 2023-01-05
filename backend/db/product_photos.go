@@ -16,17 +16,35 @@ func (photo *ProductPhoto) Create() (err error) {
 	return
 }
 
-func (photo *ProductPhoto) Delete() (err error) {
-	_, err = DB.Exec("DELETE FROM PRODUCT_PHOTO WHERE ID=$1", photo.ID)
+func (product *Product) DeletePhotos() (err error) {
+	_, err = DB.Exec("DELETE FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
 	return
 }
 
 func (product *Product) CreatePhotos() (err error) {
+	product.DeletePhotos()
 	for _, photo := range product.ProductPhotos {
 		photo.ProductID = product.ID
 		if err = photo.Create(); err != nil {
 			return
 		}
+	}
+	return
+}
+
+func (product *Product) GetPhotos() (err error) {
+	rows, err := DB.Query("SELECT * FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var photo ProductPhoto
+		err = rows.Scan(&photo.ID, &photo.ProductID, &photo.Photo)
+		if err != nil {
+			return
+		}
+		product.ProductPhotos = append(product.ProductPhotos, photo)
 	}
 	return
 }

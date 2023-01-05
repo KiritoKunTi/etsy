@@ -5,7 +5,13 @@ import (
 	"github.com/TutorialEdge/realtime-chat-go-react/db"
 	"github.com/TutorialEdge/realtime-chat-go-react/utils"
 	"net/http"
+	"os"
 	"strconv"
+)
+
+const (
+	productPhotoDir = "product"
+	productPhotoKey = "photo"
 )
 
 func CreateProductHandler(writer http.ResponseWriter, request *http.Request) {
@@ -60,9 +66,10 @@ func UpdateProductHandler(writer http.ResponseWriter, request *http.Request) {
 
 func UpdateProductPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
+	request.ParseMultipartForm(10 << 20)
 	session, err := utils.Session(writer, request)
 	if err != nil {
-		utils.SendAndPrintErrorMessage(writer, err)
+		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
 		return
 	}
 	productID, err := strconv.Atoi(request.URL.Query().Get("product_id"))
@@ -73,12 +80,14 @@ func UpdateProductPhotoHandler(writer http.ResponseWriter, request *http.Request
 	product, err := db.ProductByID(productID)
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
+		return
 	}
 	if product.UserID != session.User_ID {
 		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
 		return
 	}
-	filename, err := utils.PasteFile(request, "product")
+	os.Remove(product.MainPhoto)
+	filename, err := utils.PasteFile(request, productPhotoDir, productPhotoKey, product.ID)
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
@@ -87,6 +96,7 @@ func UpdateProductPhotoHandler(writer http.ResponseWriter, request *http.Request
 	err = product.UpdatePhoto()
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
+		return
 	}
 	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, product)
 }
@@ -126,7 +136,7 @@ func UserProductsHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	userID, err := strconv.Atoi(request.URL.Query().Get("user_id"))
 	if err != nil {
-		utils.SendAndPrintErrorMessage(writer, err)
+		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
 		return
 	}
 	products, err := db.ProductsByUserID(userID)
@@ -135,4 +145,25 @@ func UserProductsHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	utils.SendMessage(writer, utils.SuccessfullyRequested, http.StatusOK, products)
+}
+
+func UpgradeProductPhotosHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	productID, err := strconv.Atoi(request.URL.Query().Get("product_id"))
+	if err != nil {
+		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
+		return
+	}
+	product, err := db.ProductByID(productID)
+	if err != nil {
+		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
+		return
+	}
+	if session, err := utils.Session(writer, request); session.User_ID != product.UserID || err != nil {
+		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
+		return
+	}
+	product.ProductPhotos, _ = utils.PasteProductPhoto(request, product)
+	product.CreatePhotos()
+	utils.SendMessage(writer, utils.SuccessfullyCreatedMessage, http.StatusOK, product)
 }

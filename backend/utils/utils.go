@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Message struct {
@@ -56,18 +57,32 @@ func Session(writer http.ResponseWriter, request *http.Request) (session db.Sess
 	return
 }
 
-func PasteFile(request *http.Request, file string) (filename string, err error) {
-	in, header, err := request.FormFile("photo")
+func PasteFile(request *http.Request, file string, key string, userID int) (filename string, err error) {
+	in, header, err := request.FormFile(key)
 	if err != nil {
 		return
 	}
 	defer in.Close()
-	out, err := os.Create("private/" + file + "/" + header.Filename)
-
+	filename = "private/" + file + "/" + strconv.Itoa(userID) + "/" + header.Filename
+	os.Mkdir("private/"+file+"/"+strconv.Itoa(userID), os.ModePerm)
+	out, err := os.Create(filename)
 	if err != nil {
 		return
 	}
 	defer out.Close()
 	io.Copy(out, in)
-	return out.Name(), nil
+	return filename, nil
+}
+
+func PasteProductPhoto(request *http.Request, product db.Product) (photos []db.ProductPhoto, err error) {
+	for i := 1; i > 0; i++ {
+		filename, err := PasteFile(request, "product_photos", "photo"+strconv.Itoa(i), product.ID)
+		if err != nil {
+			return photos, err
+		}
+		photo := db.ProductPhoto{ProductID: product.ID, Photo: filename}
+		photos = append(photos, photo)
+		fmt.Println(photos)
+	}
+	return
 }

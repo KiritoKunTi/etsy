@@ -5,9 +5,13 @@ import (
 	"github.com/TutorialEdge/realtime-chat-go-react/db"
 	"github.com/TutorialEdge/realtime-chat-go-react/utils"
 	"net/http"
+	"os"
 )
 
-const photo = "avatar"
+const (
+	userPhotoDir = "avatar"
+	photoKey     = "photo"
+)
 
 func UpdateUserPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -22,7 +26,8 @@ func UpdateUserPhotoHandler(writer http.ResponseWriter, request *http.Request) {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
-	photo, err := utils.PasteFile(request, photo)
+	os.Remove(user.Photo)
+	photo, err := utils.PasteFile(request, userPhotoDir, photoKey, user.ID)
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
