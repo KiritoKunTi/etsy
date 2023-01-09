@@ -22,6 +22,7 @@ type User struct {
 	Description     string `json:"description"`
 	UsernameOrEmail string `json:"username_or_email,omitempty"`
 	OldPassword     string `json:"old_password,omitempty"`
+	IsActive        bool   `json:"-"`
 }
 
 var ErrExistsUsernameOrEmail = errors.New("Already have username or email on other account")
@@ -82,17 +83,18 @@ func (user *User) Create() (err error) {
 }
 
 func UserByID(user_id int) (user User, err error) {
-	err = DB.QueryRow("SELECT * FROM USERS WHERE ID = $1", user_id).Scan(
+	err = DB.QueryRow("SELECT * FROM USERS WHERE ID = $1 AND IS_ACTIVE=TRUE", user_id).Scan(
 		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.LanguageCode,
-		&user.Description, &user.CreatedAt,
+		&user.Description, &user.IsActive, &user.CreatedAt,
 	)
 	return
 }
 
 func UserByIDForPublic(user_id int) (user User, err error) {
 	err = DB.QueryRow(
-		"SELECT USERNAME, FIRST_NAME, LAST_NAME, IS_SHOP, PHOTO, DESCRIPTION FROM USERS WHERE ID = $1", user_id,
+		"SELECT USERNAME, FIRST_NAME, LAST_NAME, IS_SHOP, PHOTO, DESCRIPTION FROM USERS WHERE ID = $1 AND IS_ACTIVE=TRUE",
+		user_id,
 	).Scan(
 		&user.Username, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.Description,
@@ -121,19 +123,19 @@ func (user *User) Session() (session Session, err error) {
 }
 
 func UserByUsername(username string) (user User, err error) {
-	err = DB.QueryRow("SELECT * FROM USERS WHERE USERNAME=$1", username).Scan(
+	err = DB.QueryRow("SELECT * FROM USERS WHERE USERNAME=$1 AND IS_ACTIVE=TRUE", username).Scan(
 		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.LanguageCode,
-		&user.Description, &user.CreatedAt,
+		&user.Description, &user.IsActive, &user.CreatedAt,
 	)
 	return
 }
 
 func UserByEmail(email string) (user User, err error) {
-	err = DB.QueryRow("SELECT * FROM USERS WHERE EMAIL = $1", email).Scan(
+	err = DB.QueryRow("SELECT * FROM USERS WHERE EMAIL = $1 AND IS_ACTIVE=TRUE", email).Scan(
 		&user.ID, &user.UUID, &user.Username, &user.Email, &user.Password, &user.FirstName, &user.LastName,
 		&user.IsShop, &user.Photo, &user.LanguageCode,
-		&user.Description, &user.CreatedAt,
+		&user.Description, &user.IsActive, &user.CreatedAt,
 	)
 	return
 }
@@ -141,14 +143,19 @@ func UserByEmail(email string) (user User, err error) {
 func existsUsernameNotID(username string, id int) bool {
 	var existsUsername bool
 	DB.QueryRow(
-		"SELECT EXISTS (SELECT EMAIL FROM USERS WHERE USERNAME=$1 AND ID != $2)", username, id,
+		"SELECT EXISTS (SELECT EMAIL FROM USERS WHERE USERNAME=$1 AND ID != $2 AND IS_ACTIVE_TRUE)", username, id,
 	).Scan(&existsUsername)
 	return existsUsername
 }
 func existsEmailNotID(email string, id int) bool {
 	var existsEmail bool
 	DB.QueryRow(
-		"SELECT EXISTS (SELECT EMAIL FROM USERS WHERE EMAIL=$1 AND ID != $2)", email, id,
+		"SELECT EXISTS (SELECT EMAIL FROM USERS WHERE EMAIL=$1 AND ID != $2 AND IS_ACTIVE=TRUE)", email, id,
 	).Scan(&existsEmail)
 	return existsEmail
+}
+
+func (user *User) Deactivate() {
+	user.IsActive = false
+	DB.Exec("UPDATE USERS SET IS_ACTIVE=FALSE WHERE ID=$1", user.ID)
 }

@@ -19,6 +19,7 @@ create table users (
     photo         varchar(255),
     language_code varchar(255),
     description   text,
+    is_active     boolean,
     created_at    timestamp not null
 );
 
@@ -47,6 +48,7 @@ create table products(
     amo_comments    integer,
     amo_ratings     integer,
     rating          decimal,
+    is_active       boolean,
     created_at      timestamp
 );
 create table product_parameters(
@@ -60,6 +62,21 @@ create table product_photo(
     id          serial primary key,
     product_id  integer references products(id) on delete cascade,
     photo       varchar(320)
+);
+
+create table product_likes(
+    id         serial primary key,
+    product_id integer references products(id) on delete cascade,
+    user_id    integer references users(id) on delete cascade,
+    created_at timestamp
+);
+
+create table product_comments(
+    id          serial primary key,
+    product_id  integer references products(id) on delete cascade,
+    user_id     integer references users(id) on delete cascade,
+    text        varchar,
+    created_at  timestamp
 );
 
 
@@ -96,15 +113,33 @@ create or replace trigger product_insertion_category
     after insert on
     products for each row
     execute procedure product_insertion_category_function();
+
+
+create or replace function product_delete_category_function()
+    returns trigger
+    as $$
+begin
+update categories set amo_products = amo_products - 1 where id = OLD.category_id;
+return new;
+end;
+    $$
+language 'plpgsql';
+
+create or replace trigger product_delete_category
+    after delete on
+    products for each row
+    execute procedure product_insertion_category_function();
 alter table users alter "photo" set default 'private/avatar/default.jpg';
 alter table users alter "language_code" set default 'en';
 alter table users alter "description" set default '';
+alter table users alter "is_active" set default true;
 alter table products alter "amo_likes" set default 0;
 alter table products alter "amo_comments" set default 0;
 alter table products alter "amo_ratings" set default 0;
 alter table categories alter "amo_products" set default 0;
 alter table products alter "rating" set default 0;
 alter table products alter "photo" set default 'private/product/default.jpg';
+alter table products alter "is_active" set default true;
 insert into categories(name) values
                                   ('Electronics'),
                                   (E'Men\'s Fashion');

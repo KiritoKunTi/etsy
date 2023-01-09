@@ -1,4 +1,6 @@
-package db
+package db_store
+
+import "github.com/TutorialEdge/realtime-chat-go-react/db"
 
 type ProductParameter struct {
 	ID        int    `json:"id"`
@@ -8,7 +10,7 @@ type ProductParameter struct {
 }
 
 func (parameter *ProductParameter) Create() (err error) {
-	stmt, err := DB.Prepare("INSERT INTO PRODUCT_PARAMETERS(PRODUCT_ID, KEY, VALUE) VALUES ($1, $2, $3) RETURNING ID")
+	stmt, err := db.DB.Prepare("INSERT INTO PRODUCT_PARAMETERS(PRODUCT_ID, KEY, VALUE) VALUES ($1, $2, $3) RETURNING ID")
 	if err != nil {
 		return
 	}
@@ -18,7 +20,7 @@ func (parameter *ProductParameter) Create() (err error) {
 }
 
 func ProductParametersByProductID(productID int) (parameters []ProductParameter, err error) {
-	rows, err := DB.Query("SELECT * FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1", productID)
+	rows, err := db.DB.Query("SELECT * FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1", productID)
 	if err != nil {
 		return
 	}
@@ -35,7 +37,7 @@ func ProductParametersByProductID(productID int) (parameters []ProductParameter,
 }
 
 func (product *Product) DeleteParameters() (err error) {
-	stmt, err := DB.Prepare("DELETE FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1")
+	stmt, err := db.DB.Prepare("DELETE FROM PRODUCT_PARAMETERS WHERE PRODUCT_ID=$1")
 	if err != nil {
 		return
 	}

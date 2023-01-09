@@ -53,9 +53,25 @@ func initDB() {
 }
 
 func configDB() {
+	tables()
+	triggers()
+}
+
+func tables() {
 	st, ioErr := ioutil.ReadFile("db/setup.sql")
 	if ioErr != nil {
 		fmt.Println("Cannot read data/setup.sql")
+		os.Exit(1)
+	}
+	if _, err := DB.Exec(string(st)); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func triggers() {
+	st, ioErr := ioutil.ReadFile("db/triggers.sql")
+	if ioErr != nil {
+		fmt.Println("Cannot read data/triggers.sql")
 		os.Exit(1)
 	}
 	if _, err := DB.Exec(string(st)); err != nil {

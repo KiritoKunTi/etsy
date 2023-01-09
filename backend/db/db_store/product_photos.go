@@ -1,4 +1,8 @@
-package db
+package db_store
+
+import (
+	"github.com/TutorialEdge/realtime-chat-go-react/db"
+)
 
 type ProductPhoto struct {
 	ID        int
@@ -7,7 +11,7 @@ type ProductPhoto struct {
 }
 
 func (photo *ProductPhoto) Create() (err error) {
-	stmt, err := DB.Prepare("INSERT INTO PRODUCT_PHOTOS(PRODUCT_ID, PHOTO) VALUES ($1, $2) RETURNING ID")
+	stmt, err := db.DB.Prepare("INSERT INTO PRODUCT_PHOTO(PRODUCT_ID, PHOTO) VALUES ($1, $2) RETURNING ID")
 	if err != nil {
 		return
 	}
@@ -17,7 +21,7 @@ func (photo *ProductPhoto) Create() (err error) {
 }
 
 func (product *Product) DeletePhotos() (err error) {
-	_, err = DB.Exec("DELETE FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
+	_, err = db.DB.Exec("DELETE FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
 	return
 }
 
@@ -33,7 +37,7 @@ func (product *Product) CreatePhotos() (err error) {
 }
 
 func (product *Product) GetPhotos() (err error) {
-	rows, err := DB.Query("SELECT * FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
+	rows, err := db.DB.Query("SELECT * FROM PRODUCT_PHOTO WHERE PRODUCT_ID=$1", product.ID)
 	if err != nil {
 		return
 	}

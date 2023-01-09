@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TutorialEdge/realtime-chat-go-react/db"
+	"github.com/TutorialEdge/realtime-chat-go-react/db/db_store"
 	"io"
 	"net/http"
 	"os"
@@ -74,15 +75,14 @@ func PasteFile(request *http.Request, file string, key string, userID int) (file
 	return filename, nil
 }
 
-func PasteProductPhoto(request *http.Request, product db.Product) (photos []db.ProductPhoto, err error) {
+func PasteProductPhoto(request *http.Request, product db_store.Product) (photos []db_store.ProductPhoto, err error) {
 	for i := 1; i > 0; i++ {
 		filename, err := PasteFile(request, "product_photos", "photo"+strconv.Itoa(i), product.ID)
 		if err != nil {
 			return photos, err
 		}
-		photo := db.ProductPhoto{ProductID: product.ID, Photo: filename}
+		photo := db_store.ProductPhoto{ProductID: product.ID, Photo: filename}
 		photos = append(photos, photo)
-		fmt.Println(photos)
 	}
 	return
 }

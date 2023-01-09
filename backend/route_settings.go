@@ -63,3 +63,8 @@ func UpdateUserHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, user)
 }
+
+func DeactivateUserHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "json/application")
+
+}
