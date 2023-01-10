@@ -15,4 +15,6 @@ func Store_Handlers() {
 	Router.HandleFunc("/store/deactivateproduct", store.ProductDeactivateHandler)
 	Router.HandleFunc("/store/likeproduct", store.LikeProduct)
 	Router.HandleFunc("/store/removelikeproduct", store.RemoveLikeProduct)
+	Router.HandleFunc("/store/commentproduct", store.CommentProduct)
+	Router.HandleFunc("/store/removecommentproduct", store.RemoveCommentProduct)
 }

@@ -74,7 +74,7 @@ end;
     $$
 language 'plpgsql';
 
-create or replace trigger comment_insertion_product
+create or replace trigger comment_delete_product
     after insert on
     product_comments for each row
     execute procedure comment_insertion_product_function();

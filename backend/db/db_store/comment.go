@@ -14,7 +14,7 @@ type ProductComment struct {
 }
 
 func CommentsByProductID(productID int) (comments []ProductComment, err error) {
-	rows, err := db.DB.Query("SELECT * FROM PRODUCT_COMMENTS WHERE ID=$1", productID)
+	rows, err := db.DB.Query("SELECT * FROM PRODUCT_COMMENTS WHERE PRODUCT_ID=$1", productID)
 	if err != nil {
 		return
 	}
@@ -37,6 +37,15 @@ func (comment *ProductComment) Create() (err error) {
 	}
 	defer st.Close()
 	err = st.QueryRow(comment.ProductID, comment.UserID, comment.Text, time.Now()).Scan(&comment.ID, &comment.CreatedAt)
+	return
+}
+
+func CommentByID(id int) (comment ProductComment, err error) {
+	if err = db.DB.QueryRow("SELECT * FROM PRODUCT_COMMENTS WHERE ID=$1", id).Scan(
+		&comment.ID, &comment.ProductID, &comment.UserID, &comment.Text, &comment.CreatedAt,
+	); err != nil {
+		return
+	}
 	return
 }
 
