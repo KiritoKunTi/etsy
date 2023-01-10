@@ -50,7 +50,7 @@ func UpdateProductHandler(writer http.ResponseWriter, request *http.Request) {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
-	if prod, err := db_store.ProductByID(product.ID); err != nil || prod.UserID != session.User_ID {
+	if prod, err := db_store.ProductByIDDetail(product.ID); err != nil || prod.UserID != session.User_ID {
 		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
 		return
 	}
@@ -76,7 +76,7 @@ func UpdateProductPhotoHandler(writer http.ResponseWriter, request *http.Request
 		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
 		return
 	}
-	product, err := db_store.ProductByID(productID)
+	product, err := db_store.ProductByIDDetail(productID)
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
@@ -115,7 +115,7 @@ func UpgradeProductPhotosHandler(writer http.ResponseWriter, request *http.Reque
 		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
 		return
 	}
-	product, err := db_store.ProductByID(productID)
+	product, err := db_store.ProductByIDDetail(productID)
 	if err != nil {
 		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
 		return
@@ -136,10 +136,35 @@ func ProductHandler(writer http.ResponseWriter, request *http.Request) {
 		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
 		return
 	}
-	product, err := db_store.ProductByID(productID)
+	product, err := db_store.ProductByIDDetail(productID)
 	if err != nil {
 		utils.SendAndPrintErrorMessage(writer, err)
 		return
 	}
 	utils.SendMessage(writer, utils.SuccessfullyRequested, http.StatusOK, product)
+}
+
+func ProductDeactivateHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	productID, err := strconv.Atoi(request.URL.Query().Get("product_id"))
+	if err != nil {
+		utils.SendMessage(writer, utils.BadRequestMessage, http.StatusBadRequest, nil)
+		return
+	}
+	session, err := utils.Session(writer, request)
+	if err != nil {
+		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
+		return
+	}
+	product, err := db_store.ProductByID(productID)
+	if err != nil {
+		utils.SendAndPrintErrorMessage(writer, err)
+		return
+	}
+	if product.UserID != session.User_ID {
+		utils.SendMessage(writer, utils.AuthorizationRequestMessage, http.StatusUnauthorized, nil)
+		return
+	}
+	product.Deactivate()
+	utils.SendMessage(writer, utils.SuccessfullyUpdatedMessage, http.StatusOK, nil)
 }

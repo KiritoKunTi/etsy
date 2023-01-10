@@ -1,4 +1,6 @@
 drop table if exists product_photo;
+drop table if exists product_likes;
+drop table if exists product_comments;
 drop table if exists sessions;
 drop table if exists messages;
 drop table if exists chats;

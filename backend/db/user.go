@@ -7,19 +7,19 @@ import (
 )
 
 type User struct {
-	ID              int    `json:"id"`
+	ID              int    `json:"id,omitempty"`
 	UUID            string `json:"UUID,omitempty"`
-	FirstName       string `json:"first_name"`
-	LastName        string `json:"last_name"`
+	FirstName       string `json:"first_name,omitempty"`
+	LastName        string `json:"last_name,omitempty"`
 	IsShop          bool   `json:"is_shop"`
-	Username        string `json:"username"`
+	Username        string `json:"username,omitempty"`
 	Password        string `json:"password,omitempty"`
 	Repassword      string `json:"repassword,omitempty"`
-	Photo           string `json:"photo"`
+	Photo           string `json:"photo,omitempty"`
 	LanguageCode    string `json:"languageCode,omitempty"`
-	CreatedAt       string `json:"created_at"`
-	Email           string `json:"email"`
-	Description     string `json:"description"`
+	CreatedAt       string `json:"created_at,omitempty"`
+	Email           string `json:"email,omitempty"`
+	Description     string `json:"description,omitempty"`
 	UsernameOrEmail string `json:"username_or_email,omitempty"`
 	OldPassword     string `json:"old_password,omitempty"`
 	IsActive        bool   `json:"-"`
@@ -32,6 +32,7 @@ func (user *User) HideInfo() {
 	user.Password = ""
 	user.Repassword = ""
 	user.OldPassword = ""
+	user.Email = ""
 }
 
 func (user *User) Update() (err error) {

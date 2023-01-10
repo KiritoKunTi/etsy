@@ -6,15 +6,28 @@ import (
 )
 
 type ProductComment struct {
-	ID        int    `json:"-"`
+	ID        int    `json:"id"`
 	ProductID int    `json:"product_id"`
 	UserID    int    `json:"user_id"`
 	Text      string `json:"text"`
 	CreatedAt string `json:"created_at"`
 }
 
-func (product *Product) Comments() (comments []ProductComment) {
-	rows, err := db.DB.Query()
+func CommentsByProductID(productID int) (comments []ProductComment, err error) {
+	rows, err := db.DB.Query("SELECT * FROM PRODUCT_COMMENTS WHERE ID=$1", productID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var comment ProductComment
+		err = rows.Scan(&comment.ID, &comment.ProductID, &comment.UserID, &comment.Text, &comment.CreatedAt)
+		if err != nil {
+			return
+		}
+		comments = append(comments, comment)
+	}
+	return
 }
 
 func (comment *ProductComment) Create() (err error) {

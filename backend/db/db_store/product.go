@@ -26,6 +26,43 @@ type Product struct {
 	MainPhoto         string             `json:"photo"`
 	ProductPhotos     []ProductPhoto     `json:"photos,omitempty"`
 	IsActive          bool               `json:"-"`
+	Comments          []ProductComment   `json:"comments,omitempty"`
+}
+
+func ProductByID(productID int) (product Product, err error) {
+	err = db.DB.QueryRow("SELECT * FROM PRODUCTS WHERE ID=$1 AND IS_ACTIVE=TRUE", productID).Scan(
+		&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.MainPhoto,
+		&product.Price, &product.Amount, &product.Description, &product.AmountLikes, &product.AmountComments,
+		&product.AmountRatings,
+		&product.Rating, &product.IsActive, &product.CreatedAt,
+	)
+	return
+}
+
+func ProductByIDDetail(productID int) (product Product, err error) {
+	product, err = ProductByID(productID)
+	if err != nil {
+		return
+	}
+	if product.User, err = db.UserByIDForPublic(product.UserID); err != nil {
+		return
+	}
+	if product.Category, err = CategoryByID(product.CategoryID); err != nil {
+		return
+	}
+	if product.ProductParameters, err = ProductParametersByProductID(productID); err != nil {
+		return
+	}
+	if err = product.GetPhotos(); err != nil {
+		return
+	}
+	if err = product.GetPhotos(); err != nil {
+		return
+	}
+	if product.Comments, err = CommentsByProductID(product.ID); err != nil {
+		return
+	}
+	return
 }
 
 func (product *Product) Update() (err error) {
@@ -99,31 +136,6 @@ func (product *Product) SetUser(userID int) {
 	product.User.HideInfo()
 }
 
-func ProductByID(productID int) (product Product, err error) {
-	err = db.DB.QueryRow("SELECT * FROM PRODUCTS WHERE ID=$1 AND IS_ACTIVE=TRUE", productID).Scan(
-		&product.ID, &product.UserID, &product.CategoryID, &product.Name, &product.MainPhoto,
-		&product.Price, &product.Amount, &product.Description, &product.AmountLikes, &product.AmountComments,
-		&product.AmountRatings,
-		&product.Rating, &product.IsActive, &product.CreatedAt,
-	)
-	if err != nil {
-		return
-	}
-	if product.User, err = db.UserByIDForPublic(product.UserID); err != nil {
-		return
-	}
-	if product.Category, err = CategoryByID(product.CategoryID); err != nil {
-		return
-	}
-	if product.ProductParameters, err = ProductParametersByProductID(productID); err != nil {
-		return
-	}
-	if err = product.GetPhotos(); err != nil {
-		return
-	}
-	return
-}
-
 func ProductsByUserID(userID int) (products []Product, err error) {
 	rows, err := db.DB.Query("SELECT * FROM PRODUCTS	WHERE USER_ID=$1 AND IS_ACTIVE", userID)
 	if err != nil {
@@ -153,14 +165,6 @@ func QueryToSliceProducts(rows *sql.Rows) (products []Product, err error) {
 			&product.Description, &product.AmountLikes, &product.AmountComments, &product.AmountRatings,
 			&product.Rating, &product.IsActive, &product.CreatedAt,
 		)
-		if err != nil {
-			return
-		}
-		product.User, err = db.UserByIDForPublic(product.UserID)
-		if err != nil {
-			return
-		}
-		product.Category, err = CategoryByID(product.CategoryID)
 		if err != nil {
 			return
 		}
