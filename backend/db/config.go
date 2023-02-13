@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	_ "github.com/lib/pq"
 	"io/ioutil"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
 type DBConfig struct {
@@ -49,7 +50,7 @@ func initDB() {
 		fmt.Println("We have problems with connection database", err)
 		os.Exit(1)
 	}
-	//configDB()
+	// configDB()
 }
 
 func configDB() {
